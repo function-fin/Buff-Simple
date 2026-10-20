@@ -1,0 +1,536 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local OPEN_ICON_ID   = "rbxassetid://121524207604033"
+local SPEED_ICON_ID  = "rbxassetid://111520161534759"
+local JUMP_ICON_ID   = "rbxassetid://102697382246540"
+local SPIN_ICON_ID   = "rbxassetid://96695850533879"
+local SUN_ICON_ID    = "rbxassetid://78790652492224"
+local CLOSE_ICON_ID  = "rbxassetid://78774633521849"
+
+local speedVisible = false
+local jumpVisible = false
+local spinVisible = false
+
+local speedActive = false
+local spinActive = false
+
+local hudFrozen = false
+
+local customSpeed = 16
+local customJump = 50
+local customSpin = 90
+
+if playerGui:FindFirstChild("ProjectAtributosHUD") then
+	playerGui.ProjectAtributosHUD:Destroy()
+end
+if playerGui:FindFirstChild("HUDButtons") then
+	playerGui.HUDButtons:Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ProjectAtributosHUD"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 10
+screenGui.Parent = playerGui
+
+local openButton = Instance.new("ImageButton")
+openButton.Name = "OpenButton"
+openButton.Size = UDim2.new(0, 52, 0, 52)
+openButton.Position = UDim2.new(0, 15, 1, -125)
+openButton.BackgroundTransparency = 1
+openButton.Image = OPEN_ICON_ID
+openButton.ZIndex = 5
+openButton.Parent = screenGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 460, 0, 270)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = true
+mainFrame.ZIndex = 10
+mainFrame.Parent = screenGui
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(255, 255, 255)
+mainStroke.Thickness = 2
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mainStroke.Parent = mainFrame
+
+local sunIcon = Instance.new("ImageLabel")
+sunIcon.Size = UDim2.new(0, 28, 0, 28)
+sunIcon.Position = UDim2.new(0, 10, 0, 10)
+sunIcon.BackgroundTransparency = 1
+sunIcon.Image = SUN_ICON_ID
+sunIcon.ZIndex = 11
+sunIcon.Parent = mainFrame
+
+local titleBarIcon = Instance.new("Frame")
+titleBarIcon.Size = UDim2.new(0, 4, 0, 20)
+titleBarIcon.Position = UDim2.new(0, 44, 0, 14)
+titleBarIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+titleBarIcon.BorderSizePixel = 0
+titleBarIcon.ZIndex = 11
+titleBarIcon.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -95, 0, 40)
+titleLabel.Position = UDim2.new(0, 54, 0, 8)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "PROJECT de Atributos\n<font size='10' transparency='0.3'>Configure e ative seus atributos de movimento.</font>"
+titleLabel.RichText = true
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 15
+titleLabel.Font = Enum.Font.Arcade
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 11
+titleLabel.Parent = mainFrame
+
+local titleLine = Instance.new("Frame")
+titleLine.Size = UDim2.new(1, -24, 0, 2)
+titleLine.Position = UDim2.new(0, 12, 0, 48)
+titleLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+titleLine.BorderSizePixel = 0
+titleLine.ZIndex = 11
+titleLine.Parent = mainFrame
+
+local controlsHeader = Instance.new("TextLabel")
+controlsHeader.Size = UDim2.new(0, 205, 0, 22)
+controlsHeader.Position = UDim2.new(0, 12, 0, 56)
+controlsHeader.BackgroundTransparency = 1
+controlsHeader.Text = "CONTROLES"
+controlsHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+controlsHeader.TextSize = 14
+controlsHeader.Font = Enum.Font.Arcade
+controlsHeader.ZIndex = 11
+controlsHeader.Parent = mainFrame
+
+local headerLine1 = Instance.new("Frame")
+headerLine1.Size = UDim2.new(1, 0, 0, 2)
+headerLine1.Position = UDim2.new(0, 0, 1, 0)
+headerLine1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+headerLine1.BorderSizePixel = 0
+headerLine1.ZIndex = 11
+headerLine1.Parent = controlsHeader
+
+local configHeader = Instance.new("TextLabel")
+configHeader.Size = UDim2.new(0, 210, 0, 22)
+configHeader.Position = UDim2.new(1, -222, 0, 56)
+configHeader.BackgroundTransparency = 1
+configHeader.Text = "CONFIGURAÇÕES"
+configHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+configHeader.TextSize = 14
+configHeader.Font = Enum.Font.Arcade
+configHeader.ZIndex = 11
+configHeader.Parent = mainFrame
+
+local headerLine2 = Instance.new("Frame")
+headerLine2.Size = UDim2.new(1, 0, 0, 2)
+headerLine2.Position = UDim2.new(0, 0, 1, 0)
+headerLine2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+headerLine2.BorderSizePixel = 0
+headerLine2.ZIndex = 11
+headerLine2.Parent = configHeader
+
+local closeButton = Instance.new("ImageButton")
+closeButton.Size = UDim2.new(0, 32, 0, 32)
+closeButton.Position = UDim2.new(1, -42, 0, 10)
+closeButton.BackgroundTransparency = 1
+closeButton.Image = CLOSE_ICON_ID
+closeButton.ZIndex = 11
+closeButton.Parent = mainFrame
+
+local divider = Instance.new("Frame")
+divider.Size = UDim2.new(0, 2, 1, -64)
+divider.Position = UDim2.new(0.5, -1, 0, 56)
+divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+divider.BorderSizePixel = 0
+divider.ZIndex = 11
+divider.Parent = mainFrame
+
+local function createControlBox(name, yPos)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0, 205, 0, 38)
+	container.Position = UDim2.new(0, 12, 0, yPos)
+	container.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	container.BorderSizePixel = 0
+	container.ZIndex = 11
+	container.Parent = mainFrame
+
+	local containerStroke = Instance.new("UIStroke")
+	containerStroke.Color = Color3.fromRGB(255, 255, 255)
+	containerStroke.Thickness = 1.5
+	containerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	containerStroke.Parent = container
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 110, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextSize = 15
+	label.Font = Enum.Font.Arcade
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = 12
+	label.Parent = container
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Size = UDim2.new(0, 44, 0, 22)
+	toggleBtn.Position = UDim2.new(1, -52, 0.5, -11)
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	toggleBtn.Text = ""
+	toggleBtn.ZIndex = 12
+	toggleBtn.Parent = container
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(1, 0)
+	toggleCorner.Parent = toggleBtn
+
+	local toggleStroke = Instance.new("UIStroke")
+	toggleStroke.Color = Color3.fromRGB(255, 255, 255)
+	toggleStroke.Thickness = 2
+	toggleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	toggleStroke.Parent = toggleBtn
+
+	local circle = Instance.new("Frame")
+	circle.Size = UDim2.new(0, 16, 0, 16)
+	circle.Position = UDim2.new(0, 3, 0.5, -8)
+	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	circle.BorderSizePixel = 0
+	circle.ZIndex = 13
+	circle.Parent = toggleBtn
+
+	local circleCorner = Instance.new("UICorner")
+	circleCorner.CornerRadius = UDim.new(1, 0)
+	circleCorner.Parent = circle
+
+	return toggleBtn, circle
+end
+
+local speedToggle, speedCircle = createControlBox("Velocidade", 88)
+local jumpToggle, jumpCircle   = createControlBox("Pular", 134)
+local spinToggle, spinCircle   = createControlBox("Spin", 180)
+
+local function createInput(placeholderText, defaultPlaceholder, yPos)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 80, 0, 26)
+	label.Position = UDim2.new(0.5, 12, 0, yPos)
+	label.BackgroundTransparency = 1
+	label.Text = placeholderText
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextSize = 13
+	label.Font = Enum.Font.Arcade
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = 11
+	label.Parent = mainFrame
+
+	local inputBox = Instance.new("Frame")
+	inputBox.Size = UDim2.new(0, 120, 0, 26)
+	inputBox.Position = UDim2.new(1, -132, 0, yPos)
+	inputBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	inputBox.BorderSizePixel = 0
+	inputBox.ZIndex = 11
+	inputBox.Parent = mainFrame
+
+	local inputStroke = Instance.new("UIStroke")
+	inputStroke.Color = Color3.fromRGB(255, 255, 255)
+	inputStroke.Thickness = 1.5
+	inputStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	inputStroke.Parent = inputBox
+
+	local textBox = Instance.new("TextBox")
+	textBox.Size = UDim2.new(1, -10, 1, 0)
+	textBox.Position = UDim2.new(0, 5, 0, 0)
+	textBox.BackgroundTransparency = 1
+	textBox.PlaceholderText = defaultPlaceholder
+	textBox.Text = ""
+	textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+	textBox.TextSize = 13
+	textBox.Font = Enum.Font.Arcade
+	textBox.TextXAlignment = Enum.TextXAlignment.Center
+	textBox.ZIndex = 12
+	textBox.Parent = inputBox
+
+	return textBox
+end
+
+local speedInput = createInput("Velocidade:", "Ex: 100", 88)
+local jumpInput  = createInput("Pulo:", "Ex: 50", 123)
+local spinInput  = createInput("Spin:", "Ex: 90", 158)
+
+local confirmBtn = Instance.new("TextButton")
+confirmBtn.Size = UDim2.new(0, 98, 0, 36)
+confirmBtn.Position = UDim2.new(0.5, 12, 0, 200)
+confirmBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+confirmBtn.BorderSizePixel = 0
+confirmBtn.Text = "Confirmar\nAtributos"
+confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+confirmBtn.TextSize = 11
+confirmBtn.Font = Enum.Font.Arcade
+confirmBtn.ZIndex = 11
+confirmBtn.Parent = mainFrame
+
+local confirmStroke = Instance.new("UIStroke")
+confirmStroke.Color = Color3.fromRGB(255, 255, 255)
+confirmStroke.Thickness = 1.5
+confirmStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+confirmStroke.Parent = confirmBtn
+
+local freezeBtn = Instance.new("TextButton")
+freezeBtn.Size = UDim2.new(0, 110, 0, 36)
+freezeBtn.Position = UDim2.new(1, -122, 0, 200)
+freezeBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+freezeBtn.BorderSizePixel = 0
+freezeBtn.Text = "Frizar HUD\nde Controle (ON)"
+freezeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+freezeBtn.TextSize = 10
+freezeBtn.Font = Enum.Font.Arcade
+freezeBtn.ZIndex = 11
+freezeBtn.Parent = mainFrame
+
+local freezeStroke = Instance.new("UIStroke")
+freezeStroke.Color = Color3.fromRGB(255, 255, 255)
+freezeStroke.Thickness = 1.5
+freezeStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+freezeStroke.Parent = freezeBtn
+
+local hudContainer = Instance.new("ScreenGui")
+hudContainer.Name = "HUDButtons"
+hudContainer.ResetOnSpawn = false
+hudContainer.DisplayOrder = 100
+hudContainer.Parent = playerGui
+
+local hudSpinBtn = Instance.new("ImageButton")
+hudSpinBtn.Size = UDim2.new(0, 85, 0, 85)
+hudSpinBtn.Position = UDim2.new(1, -100, 0, 20)
+hudSpinBtn.BackgroundTransparency = 1
+hudSpinBtn.Image = SPIN_ICON_ID
+hudSpinBtn.ImageTransparency = 0.5
+hudSpinBtn.Visible = false
+hudSpinBtn.ZIndex = 10
+hudSpinBtn.Parent = hudContainer
+
+local hudSpeedBtn = Instance.new("ImageButton")
+hudSpeedBtn.Size = UDim2.new(0, 85, 0, 85)
+hudSpeedBtn.Position = UDim2.new(1, -100, 0, 120)
+hudSpeedBtn.BackgroundTransparency = 1
+hudSpeedBtn.Image = SPEED_ICON_ID
+hudSpeedBtn.ImageTransparency = 0.5
+hudSpeedBtn.Visible = false
+hudSpeedBtn.ZIndex = 10
+hudSpeedBtn.Parent = hudContainer
+
+local hudJumpBtn = Instance.new("ImageButton")
+hudJumpBtn.Size = UDim2.new(0, 105, 0, 105)
+hudJumpBtn.Position = UDim2.new(1, -115, 0, 220)
+hudJumpBtn.BackgroundTransparency = 1
+hudJumpBtn.Image = JUMP_ICON_ID
+hudJumpBtn.Visible = false
+hudJumpBtn.ZIndex = 10
+hudJumpBtn.Parent = hudContainer
+
+local function makeDraggable(guiObject)
+	local dragging, dragInput, dragStart, startPos
+
+	guiObject.InputBegan:Connect(function(input)
+		if guiObject ~= mainFrame and hudFrozen then return end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = guiObject.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	guiObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			if guiObject ~= mainFrame and hudFrozen then return end
+			local delta = input.Position - dragStart
+			guiObject.Position = UDim2.new(
+				startPos.X.Scale, 
+				startPos.X.Offset + delta.X, 
+				startPos.Y.Scale, 
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+makeDraggable(mainFrame)
+makeDraggable(openButton)
+makeDraggable(hudSpeedBtn)
+makeDraggable(hudJumpBtn)
+makeDraggable(hudSpinBtn)
+
+local function fullResetAndCleanup()
+	local character = player.Character
+	if character then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = 16
+			humanoid.JumpPower = 50
+		end
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+			local existingSpin = rootPart:FindFirstChild("IY_SpinVelocity")
+			if existingSpin then
+				existingSpin:Destroy()
+			end
+		end
+	end
+	screenGui:Destroy()
+	hudContainer:Destroy()
+end
+
+local function applySpinPhysics(active)
+	local character = player.Character
+	if not character then return end
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	local existingSpin = rootPart:FindFirstChild("IY_SpinVelocity")
+
+	if active and spinVisible then
+		if not existingSpin then
+			local spinVelocity = Instance.new("BodyAngularVelocity")
+			spinVelocity.Name = "IY_SpinVelocity"
+			spinVelocity.MaxTorque = Vector3.new(0, math.huge, 0)
+			spinVelocity.AngularVelocity = Vector3.new(0, customSpin, 0)
+			spinVelocity.Parent = rootPart
+		else
+			existingSpin.AngularVelocity = Vector3.new(0, customSpin, 0)
+		end
+	else
+		if existingSpin then
+			existingSpin:Destroy()
+		end
+	end
+end
+
+confirmBtn.MouseButton1Click:Connect(function()
+	if tonumber(speedInput.Text) then customSpeed = tonumber(speedInput.Text) end
+	if tonumber(jumpInput.Text)  then customJump = tonumber(jumpInput.Text) end
+	if tonumber(spinInput.Text)  then customSpin = tonumber(spinInput.Text) end
+
+	if spinActive then
+		applySpinPhysics(true)
+	end
+end)
+
+openButton.MouseButton1Click:Connect(function()
+	mainFrame.Visible = not mainFrame.Visible
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+	fullResetAndCleanup()
+end)
+
+local function setToggleVisual(circle, state)
+	if state then
+		TweenService:Create(circle, TweenInfo.new(0.2), {Position = UDim2.new(1, -19, 0.5, -8)}):Play()
+	else
+		TweenService:Create(circle, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -8)}):Play()
+	end
+end
+
+speedToggle.MouseButton1Click:Connect(function()
+	speedVisible = not speedVisible
+	hudSpeedBtn.Visible = speedVisible
+	setToggleVisual(speedCircle, speedVisible)
+	if not speedVisible then
+		speedActive = false
+		hudSpeedBtn.ImageTransparency = 0.5
+	end
+end)
+
+hudSpeedBtn.MouseButton1Click:Connect(function()
+	speedActive = not speedActive
+	hudSpeedBtn.ImageTransparency = speedActive and 0 or 0.5
+end)
+
+jumpToggle.MouseButton1Click:Connect(function()
+	jumpVisible = not jumpVisible
+	hudJumpBtn.Visible = jumpVisible
+	setToggleVisual(jumpCircle, jumpVisible)
+end)
+
+hudJumpBtn.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if character and character:FindFirstChildOfClass("Humanoid") then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local oldJump = humanoid.JumpPower
+		
+		-- Aplica a força customizada apenas para este pulo específico
+		humanoid.JumpPower = customJump
+		humanoid.UseJumpPower = true
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		
+		-- Restaura a força original para que o botão nativo do jogo não seja alterado
+		task.delay(0.1, function()
+			if humanoid and humanoid.Parent then
+				humanoid.JumpPower = oldJump
+			end
+		end)
+	end
+end)
+
+spinToggle.MouseButton1Click:Connect(function()
+	spinVisible = not spinVisible
+	hudSpinBtn.Visible = spinVisible
+	setToggleVisual(spinCircle, spinVisible)
+	if not spinVisible then
+		spinActive = false
+		hudSpinBtn.ImageTransparency = 0.5
+		applySpinPhysics(false)
+	end
+end)
+
+hudSpinBtn.MouseButton1Click:Connect(function()
+	spinActive = not spinActive
+	hudSpinBtn.ImageTransparency = spinActive and 0 or 0.5
+	applySpinPhysics(spinActive)
+end)
+
+freezeBtn.MouseButton1Click:Connect(function()
+	hudFrozen = not hudFrozen
+	freezeBtn.Text = hudFrozen and "Frizar HUD\nde Controle (ON)" or "Frizar HUD\nde Controle (OFF)"
+end)
+
+RunService.RenderStepped:Connect(function()
+	local character = player.Character
+	if not character then return end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+	if humanoid then
+		if speedActive and speedVisible then
+			humanoid.WalkSpeed = customSpeed
+		else
+			humanoid.WalkSpeed = 16
+		end
+	end
+
+	if spinActive and spinVisible then
+		applySpinPhysics(true)
+	end
+end)
