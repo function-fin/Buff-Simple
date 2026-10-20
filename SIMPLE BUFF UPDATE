@@ -19,6 +19,7 @@ local spinVisible = false
 
 local speedActive = false
 local spinActive = false
+local scriptRunning = true -- Variável de controle para desligar totalmente o script
 
 local hudFrozen = false
 
@@ -343,6 +344,7 @@ local function makeDraggable(guiObject)
 	local dragging, dragInput, dragStart, startPos
 
 	guiObject.InputBegan:Connect(function(input)
+		if not scriptRunning then return end
 		if guiObject ~= mainFrame and hudFrozen then return end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
@@ -358,12 +360,14 @@ local function makeDraggable(guiObject)
 	end)
 
 	guiObject.InputChanged:Connect(function(input)
+		if not scriptRunning then return end
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
+		if not scriptRunning then return end
 		if input == dragInput and dragging then
 			if guiObject ~= mainFrame and hudFrozen then return end
 			local delta = input.Position - dragStart
@@ -384,26 +388,30 @@ makeDraggable(hudJumpBtn)
 makeDraggable(hudSpinBtn)
 
 local function fullResetAndCleanup()
+	scriptRunning = false -- Desliga todas as rotinas e loops do script
+
 	local character = player.Character
 	if character then
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
-			humanoid.WalkSpeed = 16
+			humanoid.WalkSpeed = 16 -- Restaura para o padrão original do Roblox
 			humanoid.JumpPower = 50
 		end
 		local rootPart = character:FindFirstChild("HumanoidRootPart")
 		if rootPart then
 			local existingSpin = rootPart:FindFirstChild("IY_SpinVelocity")
 			if existingSpin then
-				existingSpin:Destroy()
+				existingSpin:Destroy() -- Remove completamente a física do spin
 			end
 		end
 	end
+
 	screenGui:Destroy()
 	hudContainer:Destroy()
 end
 
 local function applySpinPhysics(active)
+	if not scriptRunning then return end
 	local character = player.Character
 	if not character then return end
 	local rootPart = character:FindFirstChild("HumanoidRootPart")
@@ -429,6 +437,7 @@ local function applySpinPhysics(active)
 end
 
 confirmBtn.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	if tonumber(speedInput.Text) then customSpeed = tonumber(speedInput.Text) end
 	if tonumber(jumpInput.Text)  then customJump = tonumber(jumpInput.Text) end
 	if tonumber(spinInput.Text)  then customSpin = tonumber(spinInput.Text) end
@@ -439,6 +448,7 @@ confirmBtn.MouseButton1Click:Connect(function()
 end)
 
 openButton.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
@@ -455,6 +465,7 @@ local function setToggleVisual(circle, state)
 end
 
 speedToggle.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	speedVisible = not speedVisible
 	hudSpeedBtn.Visible = speedVisible
 	setToggleVisual(speedCircle, speedVisible)
@@ -465,28 +476,29 @@ speedToggle.MouseButton1Click:Connect(function()
 end)
 
 hudSpeedBtn.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	speedActive = not speedActive
 	hudSpeedBtn.ImageTransparency = speedActive and 0 or 0.5
 end)
 
 jumpToggle.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	jumpVisible = not jumpVisible
 	hudJumpBtn.Visible = jumpVisible
 	setToggleVisual(jumpCircle, jumpVisible)
 end)
 
 hudJumpBtn.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	local character = player.Character
 	if character and character:FindFirstChildOfClass("Humanoid") then
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		local oldJump = humanoid.JumpPower
 		
-		-- Aplica a força customizada apenas para este pulo específico
 		humanoid.JumpPower = customJump
 		humanoid.UseJumpPower = true
 		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 		
-		-- Restaura a força original para que o botão nativo do jogo não seja alterado
 		task.delay(0.1, function()
 			if humanoid and humanoid.Parent then
 				humanoid.JumpPower = oldJump
@@ -496,6 +508,7 @@ hudJumpBtn.MouseButton1Click:Connect(function()
 end)
 
 spinToggle.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	spinVisible = not spinVisible
 	hudSpinBtn.Visible = spinVisible
 	setToggleVisual(spinCircle, spinVisible)
@@ -507,17 +520,20 @@ spinToggle.MouseButton1Click:Connect(function()
 end)
 
 hudSpinBtn.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	spinActive = not spinActive
 	hudSpinBtn.ImageTransparency = spinActive and 0 or 0.5
 	applySpinPhysics(spinActive)
 end)
 
 freezeBtn.MouseButton1Click:Connect(function()
+	if not scriptRunning then return end
 	hudFrozen = not hudFrozen
 	freezeBtn.Text = hudFrozen and "Frizar HUD\nde Controle (ON)" or "Frizar HUD\nde Controle (OFF)"
 end)
 
 RunService.RenderStepped:Connect(function()
+	if not scriptRunning then return end
 	local character = player.Character
 	if not character then return end
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
