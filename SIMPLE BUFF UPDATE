@@ -44,8 +44,8 @@ screenGui.Parent = playerGui
 
 local openButton = Instance.new("ImageButton")
 openButton.Name = "OpenButton"
-openButton.Size = UDim2.new(0, 52, 0, 52)
-openButton.Position = UDim2.new(0, 15, 1, -125)
+openButton.Size = UDim2.new(0, 62, 0, 62) -- Aumentado 20%
+openButton.Position = UDim2.new(0, 15, 1, -135)
 openButton.BackgroundTransparency = 1
 openButton.Image = OPEN_ICON_ID
 openButton.ZIndex = 5
@@ -62,27 +62,23 @@ mainFrame.Visible = true
 mainFrame.ZIndex = 10
 mainFrame.Parent = screenGui
 
--- // ADIÇÃO DO UISCALE PARA MANTER O MESMO TAMANHO VISUAL EM QUALQUER DISPOSITIVO
+-- // UISCALE AUMENTADO EM 20% (Escala base 1.20)
 local uiScale = Instance.new("UIScale")
 uiScale.Parent = mainFrame
 
--- Função que ajusta a escala automaticamente dependendo se é mobile/tablet ou PC
 local function updateInterfaceScale()
 	local camera = workspace.CurrentCamera
 	if not camera then return end
 	local viewportSize = camera.ViewportSize
 	
-	-- Se for mobile/touch ou tela menor, aplicamos uma escala adaptativa limpa para manter o conforto visual
 	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
-		-- Dispositivo estritamente Mobile
 		if viewportSize.Y < 500 then
-			uiScale.Scale = 0.85 -- Escala ideal para celulares menores
+			uiScale.Scale = 1.02 -- 0.85 aumentado em 20%
 		else
-			uiScale.Scale = 1.0  -- Escala padrão para tablets e celulares grandes
+			uiScale.Scale = 1.20 -- 1.0 aumentado em 20%
 		end
 	else
-		-- Computador / PC
-		uiScale.Scale = 1.0
+		uiScale.Scale = 1.20 -- 1.0 aumentado em 20% para PC também
 	end
 end
 
