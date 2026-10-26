@@ -1,7 +1,9 @@
+-- // SERVIÇOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -19,7 +21,7 @@ local spinVisible = false
 
 local speedActive = false
 local spinActive = false
-local scriptRunning = true -- Variável de controle para desligar totalmente o script
+local scriptRunning = true
 
 local hudFrozen = false
 
@@ -59,6 +61,33 @@ mainFrame.BorderSizePixel = 0
 mainFrame.Visible = true
 mainFrame.ZIndex = 10
 mainFrame.Parent = screenGui
+
+-- // ADIÇÃO DO UISCALE PARA MANTER O MESMO TAMANHO VISUAL EM QUALQUER DISPOSITIVO
+local uiScale = Instance.new("UIScale")
+uiScale.Parent = mainFrame
+
+-- Função que ajusta a escala automaticamente dependendo se é mobile/tablet ou PC
+local function updateInterfaceScale()
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+	local viewportSize = camera.ViewportSize
+	
+	-- Se for mobile/touch ou tela menor, aplicamos uma escala adaptativa limpa para manter o conforto visual
+	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
+		-- Dispositivo estritamente Mobile
+		if viewportSize.Y < 500 then
+			uiScale.Scale = 0.85 -- Escala ideal para celulares menores
+		else
+			uiScale.Scale = 1.0  -- Escala padrão para tablets e celulares grandes
+		end
+	else
+		-- Computador / PC
+		uiScale.Scale = 1.0
+	end
+end
+
+updateInterfaceScale()
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInterfaceScale)
 
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -388,20 +417,20 @@ makeDraggable(hudJumpBtn)
 makeDraggable(hudSpinBtn)
 
 local function fullResetAndCleanup()
-	scriptRunning = false -- Desliga todas as rotinas e loops do script
+	scriptRunning = false
 
 	local character = player.Character
 	if character then
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
-			humanoid.WalkSpeed = 16 -- Restaura para o padrão original do Roblox
+			humanoid.WalkSpeed = 16
 			humanoid.JumpPower = 50
 		end
 		local rootPart = character:FindFirstChild("HumanoidRootPart")
 		if rootPart then
 			local existingSpin = rootPart:FindFirstChild("IY_SpinVelocity")
 			if existingSpin then
-				existingSpin:Destroy() -- Remove completamente a física do spin
+				existingSpin:Destroy()
 			end
 		end
 	end
