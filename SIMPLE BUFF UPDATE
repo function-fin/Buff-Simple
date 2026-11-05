@@ -42,8 +42,14 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 10
 screenGui.Parent = playerGui
 
+-- [SPWN] Atributos de identificação persistente
+screenGui:SetAttribute("SPWN_ManagedScriptID", "ProjectAtributosScript")
+screenGui:SetAttribute("SPWN_ManagedScriptName", "Project de Atributos")
+screenGui:SetAttribute("SPWN_ManagedScriptCategory", "Project de Atributos")
+
+-- [SPWN] Botão externo renomeado para OpenToggleButton (o Manager atua nele)
 local openButton = Instance.new("ImageButton")
-openButton.Name = "OpenButton"
+openButton.Name = "OpenToggleButton"
 openButton.Size = UDim2.new(0, 62, 0, 62) -- Aumentado 20%
 openButton.Position = UDim2.new(0, 15, 1, -135)
 openButton.BackgroundTransparency = 1
@@ -574,4 +580,76 @@ RunService.RenderStepped:Connect(function()
 	if spinActive and spinVisible then
 		applySpinPhysics(true)
 	end
+end)
+
+--------------------------------------------------
+-- [SPWN] ADAPTADOR PERSISTENTE
+--------------------------------------------------
+task.spawn(function()
+    local scriptId = "ProjectAtributosScript"
+    local scriptConfig = {
+        Name = "Project de Atributos",
+        Category = "Project de Atributos",
+        GuiObject = screenGui,
+        OnDestroy = function()
+            -- [SPWN] Espelha fullResetAndCleanup() original:
+            -- 1. Para o RenderStepped (scriptRunning = false)
+            -- 2. Restaura WalkSpeed = 16 e JumpPower = 50
+            -- 3. Remove BodyAngularVelocity (IY_SpinVelocity)
+            -- 4. Destrói AMBAS as GUIs (ProjectAtributosHUD + HUDButtons)
+            scriptRunning = false
+
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    pcall(function()
+                        humanoid.WalkSpeed = 16
+                        humanoid.JumpPower = 50
+                    end)
+                end
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local existingSpin = rootPart:FindFirstChild("IY_SpinVelocity")
+                    if existingSpin then
+                        pcall(function() existingSpin:Destroy() end)
+                    end
+                end
+            end
+
+            pcall(function() screenGui:Destroy() end)
+            pcall(function() hudContainer:Destroy() end)
+        end
+    }
+
+    -- Garante a persistência global na memória
+    _G.ScriptManagerQueue = _G.ScriptManagerQueue or {}
+    _G.RegisteredScriptDatabase = _G.RegisteredScriptDatabase or {}
+
+    -- [SPWN] Lê visibilidade persistida em vez de hardcoded true
+    local persistedVis = screenGui:GetAttribute("SPWN_ManagedVisibility")
+
+    _G.RegisteredScriptDatabase[scriptId] = {
+        Name = scriptConfig.Name,
+        Category = scriptConfig.Category,
+        GuiObject = scriptConfig.GuiObject,
+        IsVisible = (persistedVis == nil) and true or persistedVis,
+        OnDestroy = scriptConfig.OnDestroy
+    }
+
+    local exists = false
+    for _, item in ipairs(_G.ScriptManagerQueue) do
+        if item.id == scriptId then
+            exists = true
+            item.config = scriptConfig
+            break
+        end
+    end
+    if not exists then
+        table.insert(_G.ScriptManagerQueue, {id = scriptId, config = scriptConfig})
+    end
+
+    if _G.ScriptManager and type(_G.ScriptManager.RegisterScript) == "function" then
+        _G.ScriptManager.RegisterScript(scriptId, scriptConfig)
+    end
 end)
