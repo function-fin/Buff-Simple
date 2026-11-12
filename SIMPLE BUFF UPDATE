@@ -42,6 +42,22 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 10
 screenGui.Parent = playerGui
 
+-- =====================================================================
+-- ADAPTAÇÃO AUTOMÁTICA DE ESCALA (+70% NO PC, PADRÃO NO MOBILE)
+-- =====================================================================
+local uiScale = Instance.new("UIScale", screenGui)
+local function updateUIScale()
+    if not UserInputService.TouchEnabled then
+        uiScale.Scale = 1.7 -- Aumenta 70% no PC
+    else
+        uiScale.Scale = 1.0 -- Mantém tamanho padrão no mobile
+    end
+end
+updateUIScale()
+
+-- Atualiza escala se o dispositivo mudar (ex: notebook híbrido)
+UserInputService.LastInputTypeChanged:Connect(updateUIScale)
+
 -- [SPWN] Atributos de identificação persistente
 screenGui:SetAttribute("SPWN_ManagedScriptID", "ProjectAtributosScript")
 screenGui:SetAttribute("SPWN_ManagedScriptName", "Project de Atributos")
@@ -68,28 +84,7 @@ mainFrame.Visible = true
 mainFrame.ZIndex = 10
 mainFrame.Parent = screenGui
 
--- // UISCALE AUMENTADO EM 20% (Escala base 1.20)
-local uiScale = Instance.new("UIScale")
-uiScale.Parent = mainFrame
-
-local function updateInterfaceScale()
-	local camera = workspace.CurrentCamera
-	if not camera then return end
-	local viewportSize = camera.ViewportSize
-	
-	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
-		if viewportSize.Y < 500 then
-			uiScale.Scale = 1.02 -- 0.85 aumentado em 20%
-		else
-			uiScale.Scale = 1.20 -- 1.0 aumentado em 20%
-		end
-	else
-		uiScale.Scale = 1.20 -- 1.0 aumentado em 20% para PC também
-	end
-end
-
-updateInterfaceScale()
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInterfaceScale)
+-- (REMOVIDO) O UIScale antigo dentro do mainFrame foi substituído pelo novo UIScale na screenGui inteira.
 
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -342,6 +337,20 @@ hudContainer.ResetOnSpawn = false
 hudContainer.DisplayOrder = 100
 hudContainer.Parent = playerGui
 
+-- =====================================================================
+-- ADAPTAÇÃO AUTOMÁTICA DE ESCALA DO HUD (+70% NO PC, PADRÃO NO MOBILE)
+-- =====================================================================
+local hudScale = Instance.new("UIScale", hudContainer)
+local function updateHudScale()
+    if not UserInputService.TouchEnabled then
+        hudScale.Scale = 1.7
+    else
+        hudScale.Scale = 1.0
+    end
+end
+updateHudScale()
+UserInputService.LastInputTypeChanged:Connect(updateHudScale)
+
 local hudSpinBtn = Instance.new("ImageButton")
 hudSpinBtn.Size = UDim2.new(0, 85, 0, 85)
 hudSpinBtn.Position = UDim2.new(1, -100, 0, 20)
@@ -592,11 +601,6 @@ task.spawn(function()
         Category = "Project de Atributos",
         GuiObject = screenGui,
         OnDestroy = function()
-            -- [SPWN] Espelha fullResetAndCleanup() original:
-            -- 1. Para o RenderStepped (scriptRunning = false)
-            -- 2. Restaura WalkSpeed = 16 e JumpPower = 50
-            -- 3. Remove BodyAngularVelocity (IY_SpinVelocity)
-            -- 4. Destrói AMBAS as GUIs (ProjectAtributosHUD + HUDButtons)
             scriptRunning = false
 
             local character = player.Character
@@ -622,11 +626,9 @@ task.spawn(function()
         end
     }
 
-    -- Garante a persistência global na memória
     _G.ScriptManagerQueue = _G.ScriptManagerQueue or {}
     _G.RegisteredScriptDatabase = _G.RegisteredScriptDatabase or {}
 
-    -- [SPWN] Lê visibilidade persistida em vez de hardcoded true
     local persistedVis = screenGui:GetAttribute("SPWN_ManagedVisibility")
 
     _G.RegisteredScriptDatabase[scriptId] = {
